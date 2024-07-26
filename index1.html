@@ -1,0 +1,158 @@
+<html>
+    <head>
+        <base href="https://example.com/scores-app/" />
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Windows 98 NFL Scores App</title>
+        <style>
+            body {
+                font-family: "MS Sans Serif", Arial, sans-serif;
+                background-color: #008080;
+                color: #000;
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }
+            .window {
+                background-color: #c0c0c0;
+                border: 2px outset #fff;
+                box-shadow: 2px 2px 0 #000;
+                width: 300px;
+            }
+            .title-bar {
+                background: linear-gradient(90deg, #000080, #1084d0);
+                color: #fff;
+                font-weight: bold;
+                padding: 2px 4px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .close-button {
+                background-color: #c0c0c0;
+                border: 1px outset #fff;
+                width: 16px;
+                height: 16px;
+                font-size: 14px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                cursor: pointer;
+            }
+            .content {
+                padding: 10px;
+            }
+            .score-display {
+                text-align: center;
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+            .menu {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .button {
+                background-color: #c0c0c0;
+                border: 2px outset #fff;
+                padding: 5px 10px;
+                cursor: pointer;
+            }
+            .button:active {
+                border-style: inset;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="window">
+            <div class="title-bar">
+                <span>SCORES APP</span>
+                <div class="close-button">x</div>
+            </div>
+            <div class="content">
+                <div class="score-display">
+                    <div id="teams">X vs Y</div>
+                    <div id="scores">00 -- 00</div>
+                </div>
+                <select id="game-select" class="menu">
+                    <option value="">Select a game</option>
+                </select>
+                <button id="refresh-btn" class="button">Refresh Scores</button>
+            </div>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+        <script>
+            const gameSelect = document.getElementById("game-select");
+            const teamsDisplay = document.getElementById("teams");
+            const scoresDisplay = document.getElementById("scores");
+            const refreshBtn = document.getElementById("refresh-btn");
+
+            const API_KEY = "44217c9e3d91400a9cd68b369a949d52";
+            const API_URL = `https://api.sportsdata.io/v3/nfl/scores/json/ScoresBasicFinal/2023/17?key=${API_KEY}`;
+
+            async function fetchGames() {
+                try {
+                    const response = await axios.get(API_URL);
+                    const games = response.data;
+
+                    gameSelect.innerHTML =
+                        '<option value="">Select a game</option>';
+                    games.forEach((game) => {
+                        const option = document.createElement("option");
+                        option.value = game.GameKey;
+                        option.textContent = `${game.HomeTeam} vs ${game.AwayTeam}`;
+                        gameSelect.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error("Error fetching games:", error);
+                }
+            }
+
+            async function fetchScore(gameKey) {
+                try {
+                    const response = await axios.get(
+                        `${API_URL}&GameKey=${gameKey}`,
+                    );
+                    const game = response.data.find(
+                        (g) => g.GameKey === gameKey,
+                    );
+
+                    teamsDisplay.textContent = `${game.HomeTeam} vs ${game.AwayTeam}`;
+                    scoresDisplay.textContent = `${game.HomeScore} -- ${game.AwayScore}`;
+                } catch (error) {
+                    console.error("Error fetching score:", error);
+                }
+            }
+
+            gameSelect.addEventListener("change", (e) => {
+                if (e.target.value) {
+                    fetchScore(e.target.value);
+                } else {
+                    teamsDisplay.textContent = "X vs Y";
+                    scoresDisplay.textContent = "00 -- 00";
+                }
+            });
+
+            refreshBtn.addEventListener("click", () => {
+                if (gameSelect.value) {
+                    fetchScore(gameSelect.value);
+                }
+            });
+
+            // Initial fetch of games
+            fetchGames();
+
+            // Simulate closing the window
+            document
+                .querySelector(".close-button")
+                .addEventListener("click", () => {
+                    alert(
+                        "Window closed! (In a real app, this would close the window)",
+                    );
+                });
+        </script>
+    </body>
+</html>
